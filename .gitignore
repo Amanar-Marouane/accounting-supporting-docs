@@ -35,3 +35,6 @@ build/
 ### Application Properties ###
 *.properties
 !*.properties.example
+
+## Uploads ###
+uploads/
