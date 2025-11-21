@@ -33,7 +33,7 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "societe_id")
     private Societe societe; // Null when role = COMPTABLE
 

@@ -1,12 +1,14 @@
 package com.example.demo.exception;
 
-public class InvalidTokenException extends RuntimeException {
+import org.springframework.security.core.AuthenticationException;
 
-    public InvalidTokenException() {
-        super("Token is already black listed");
-    }
+public class InvalidTokenException extends AuthenticationException {
 
     public InvalidTokenException(String message) {
         super(message);
+    }
+
+    public InvalidTokenException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
