@@ -268,6 +268,7 @@ public class DocumentService implements DocumentServiceContract {
                 .exerciceComptable(document.getExerciceComptable())
                 .createdAt(document.getCreatedAt())
                 .updatedAt(document.getUpdatedAt())
+                .cheminFichier(document.getCheminFichier())
                 .build();
     }
 }

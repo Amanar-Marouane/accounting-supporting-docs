@@ -16,6 +16,7 @@ public class DocumentResponseDTO {
     private Long id;
     private String numeroPiece;
     private Document.TypeDocument typeDocument;
+    private String cheminFichier;
     private String categorieComptable;
     private LocalDate datePiece;
     private BigDecimal montant;
