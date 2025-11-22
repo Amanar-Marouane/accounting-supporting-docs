@@ -17,6 +17,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,6 +56,15 @@ class DocumentServiceTest {
     private Document document;
     private DocumentUploadDTO uploadDTO;
     private MultipartFile validFile;
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        @Primary
+        public JwtBlacklistService jwtBlacklistService() {
+            return new JwtBlacklistService();
+        }
+    }
 
     @BeforeEach
     void setUp() {

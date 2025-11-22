@@ -13,21 +13,21 @@ import com.example.demo.contract.JwtContract;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService implements JwtContract {
+
     @Value("${security.jwt.secret-key}")
     private String SECRET_KEY;
 
     @Value("${security.jwt.expiration-time}")
     private long JWT_EXPIRATION_TIME;
 
-    JwtBlacklistService jwtBlacklistService;
+    private final JwtBlacklistService jwtBlacklistService;
 
-    public JwtService(JwtBlacklistService jwtBlacklistService) {
-        this.jwtBlacklistService = jwtBlacklistService;
-    }
-
+    @Override
     public String generateToken(Map<String, String> extraClaims, String email) {
         return Jwts
                 .builder()
@@ -40,18 +40,20 @@ public class JwtService implements JwtContract {
                 .compact();
     }
 
+    @Override
     public String getEmail(String token) {
         Claims claims = extractAllClaims(token);
         return claims.getSubject();
     }
 
+    @Override
     public boolean isTokenExpired(String token) {
         Claims claims = extractAllClaims(token);
         return claims.getExpiration().before(new Date());
     }
 
+    @Override
     public Claims extractAllClaims(String token) {
-        // Extract claims after signature verification
         return Jwts
                 .parser()
                 .verifyWith(getSignInKey())
@@ -68,5 +70,4 @@ public class JwtService implements JwtContract {
     public void invalidate(String token) {
         jwtBlacklistService.blacklist(token);
     }
-
 }

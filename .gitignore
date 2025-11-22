@@ -35,6 +35,7 @@ build/
 ### Application Properties ###
 *.properties
 !*.properties.example
+!**/src/test/resources/*.properties
 
 ## Uploads ###
 uploads/
