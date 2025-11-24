@@ -47,6 +47,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         // Only allow POST requests
         if (!request.getMethod().equals(HttpMethod.POST.name())) {
+            sendErrorResponse(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                    "Méthode non autorisée",
+                    "Seule la méthode POST est autorisée pour la connexion",
+                    "METHOD_NOT_ALLOWED",
+                    request.getRequestURI());
             throw new AuthenticationException("Authentication method not supported: " + request.getMethod()) {
             };
         }
@@ -132,5 +137,25 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         errorResponse.put("path", request.getRequestURI());
 
         objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, int status, String error,
+            String message, String code, String path) {
+        try {
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(status);
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("timestamp", java.time.LocalDateTime.now().toString());
+            errorResponse.put("status", status);
+            errorResponse.put("error", error);
+            errorResponse.put("message", message);
+            errorResponse.put("code", code);
+            errorResponse.put("path", path);
+
+            objectMapper.writeValue(response.getWriter(), errorResponse);
+        } catch (IOException ex) {
+            AppLogger.error(String.format("Failed to send error response: %s", ex.getMessage()));
+        }
     }
 }

@@ -1,7 +1,10 @@
 package com.example.demo.filter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +21,7 @@ import com.example.demo.security.CustomUserDetailsService;
 import com.example.demo.service.JwtBlacklistService;
 import com.example.demo.util.AppLogger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,6 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
     CustomUserDetailsService userUtility;
     HandlerExceptionResolver handlerExceptionResolver;
     JwtBlacklistService jwtBlacklistService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -48,14 +53,24 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             processToken(request);
+            filterChain.doFilter(request, response);
 
+        } catch (InvalidTokenException e) {
+            AppLogger.error(String.format("Invalid token: %s", e.getMessage()));
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Token invalide", e.getMessage(), "INVALID_TOKEN", request.getRequestURI());
+        } catch (JwtException e) {
+            AppLogger.error(String.format("JWT error: %s", e.getMessage()));
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Erreur d'authentification", "Le token d'authentification est invalide",
+                    "JWT_ERROR", request.getRequestURI());
         } catch (Exception e) {
-            AppLogger.error(String.format("JWT Filter error: %s - %s", e.getClass().getSimpleName(), e.getMessage()));
-            handlerExceptionResolver.resolveException(request, response, null, e);
-            return;
+            AppLogger.error(String.format("Unexpected JWT Filter error: %s - %s",
+                    e.getClass().getSimpleName(), e.getMessage()));
+            sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Erreur interne", "Une erreur s'est produite lors de l'authentification",
+                    "INTERNAL_ERROR", request.getRequestURI());
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private void processToken(HttpServletRequest request) {
@@ -109,5 +124,22 @@ public class JwtFilter extends OncePerRequestFilter {
             AppLogger.error(String.format("Unexpected error in token processing: %s", e.getMessage()));
             throw new InvalidTokenException("Error processing token", e);
         }
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, int status, String error,
+            String message, String code, String path) throws IOException {
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(status);
+
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("timestamp", java.time.LocalDateTime.now().toString());
+        errorResponse.put("status", status);
+        errorResponse.put("error", error);
+        errorResponse.put("message", message);
+        errorResponse.put("code", code);
+        errorResponse.put("path", path);
+
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }
